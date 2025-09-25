@@ -1,0 +1,214 @@
+// ------------------------------------ESP 1 (LEDS (ANDAR 1 & ANDAR 2))
+
+
+
+// -------------------
+// GPIO4 (D4)  → Resistor → LED Andar 1 → GND
+// GPIO5 (D3)  → Resistor → LED Andar 2 → GND
+
+// 3.3V → Fonte de alimentação (ESP)
+// GND  → Fonte GND
+
+
+
+// ------------------------------------------------------------------------------------------------------
+// #define LED_ANDAR1 4 //  - GPIO4 (D4)
+// #define LED_ANDAR2 5 //  - GPIO5 (D3)
+
+// // #include <ESP8266WiFi.h>
+
+// const char* ssid = "NOME_REDE";
+// const char* password = "SENHA_REDE";
+
+// WiFiServer server(80);
+
+// bool estadoAndar1 = false;
+// bool estadoAndar2 = false;
+
+// void setup() {
+//   Serial.begin(115200);
+//   pinMode(LED_ANDAR1, OUTPUT);
+//   pinMode(LED_ANDAR2, OUTPUT);
+//   digitalWrite(LED_ANDAR1, LOW);
+//   digitalWrite(LED_ANDAR2, LOW);
+
+//   WiFi.begin(ssid, password);
+//   while (WiFi.status() != WL_CONNECTED) { delay(500); }
+
+//   server.begin();
+// }
+
+// void loop() {
+//   WiFiClient client = server.available();
+//   if (!client) return;
+
+//   String request = client.readStringUntil('\r');
+//   client.flush();
+
+//   if (request.indexOf("/andar1_ligar") != -1) {
+//     digitalWrite(LED_ANDAR1, HIGH);
+//     estadoAndar1 = true;
+//   }
+//   if (request.indexOf("/andar1_desligar") != -1) {
+//     digitalWrite(LED_ANDAR1, LOW);
+//     estadoAndar1 = false;
+//   }
+//   if (request.indexOf("/andar2_ligar") != -1) {
+//     digitalWrite(LED_ANDAR2, HIGH);
+//     estadoAndar2 = true;
+//   }
+//   if (request.indexOf("/andar2_desligar") != -1) {
+//     digitalWrite(LED_ANDAR2, LOW);
+//     estadoAndar2 = false;
+//   }
+
+//   String status = "andar1=" + String(estadoAndar1 ? "on" : "off") + "&andar2=" + String(estadoAndar2 ? "on" : "off");
+
+//   client.print("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n");
+//   client.print(status);
+// }
+
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+// -------------------------------------------- esp 2  - (servo, display, NF - ID)------------------------------------------------------------------
+
+// -------------------
+
+// Servo Motor:
+// GPIO12 (D6) → Sinal Servo
+// VCC          → 5V Servo
+// GND          → GND Servo
+
+// RFID MFRC522:
+// GPIO13 (D7)  → SDA
+// GPIO14 (D5)  → SCK
+// GPIO16 (D2)  → RST
+// VCC           → 3.3V
+// GND           → GND
+
+// Display LED I2C:
+// GPIO4 (D4) → SDA
+// GPIO5 (D3) → SCL
+// VCC        → 3.3V
+// GND        → GND
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+
+// #include <ESP8266WiFi.h>
+// #include <Servo.h>
+// #include <Wire.h>
+// #include <LiquidCrystal_I2C.h>
+// #include <MFRC522.h>
+// #include <SPI.h>
+
+// // Rede WiFi
+// const char* ssid = "NOME_REDE";
+// const char* password = "SENHA_REDE";
+
+// // Servidor HTTP
+// WiFiServer server(80);
+
+// // Definição de pinos
+// #define SERVO_PIN    12 // D6
+// #define RFID_SDA     13 // D7
+// #define RFID_SCK     14 // D5
+// #define RFID_RST     16 // D2
+// #define DISPLAY_SDA  4  // D4
+// #define DISPLAY_SCL  5  // D3
+
+// // Objetos
+// Servo servoMotor;
+// LiquidCrystal_I2C lcd(0x27, 16, 2); // Endereço I2C padrão
+// MFRC522 rfid(RFID_SDA, RFID_RST); // RFID
+
+// void setup() {
+//   Serial.begin(115200);
+
+//   // Conexão WiFi
+//   WiFi.begin(ssid, password);
+//   Serial.print("Conectando ao WiFi...");
+//   while (WiFi.status() != WL_CONNECTED) {
+//     delay(500);
+//     Serial.print(".");
+//   }
+//   Serial.println("\nWiFi conectado: " + WiFi.localIP().toString());
+
+//   // Inicializa servidor
+//   server.begin();
+
+//   // Inicializa servo
+//   servoMotor.attach(SERVO_PIN);
+//   servoMotor.write(0); // Posição inicial
+
+//   // Inicializa display
+//   Wire.begin(DISPLAY_SDA, DISPLAY_SCL);
+//   lcd.init();
+//   lcd.backlight();
+//   lcd.setCursor(0, 0);
+//   lcd.print("Sistema Pronto");
+
+//   // Inicializa RFID
+//   SPI.begin();
+//   rfid.PCD_Init();
+// }
+
+// void loop() {
+//   WiFiClient client = server.available();
+//   if (client) {
+//     String request = client.readStringUntil('\r');
+//     client.flush();
+
+//     Serial.println("Comando recebido: " + request);
+
+//     if (request.indexOf("/servo_abrir") != -1) {
+//       servoMotor.write(90);
+//       lcd.clear();
+//       lcd.setCursor(0, 0);
+//       lcd.print("Servo: Aberto");
+//     }
+
+//     if (request.indexOf("/servo_fechar") != -1) {
+//       servoMotor.write(0);
+//       lcd.clear();
+//       lcd.setCursor(0, 0);
+//       lcd.print("Servo: Fechado");
+//     }
+
+//     if (request.indexOf("/status") != -1) {
+//       lcd.clear();
+//       lcd.setCursor(0, 0);
+//       lcd.print("Status Consultado");
+//     }
+
+//     // Resposta HTTP
+//     client.print("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n");
+//     client.print("Comando recebido: " + request);
+//   }
+
+//   // Leitura RFID
+//   if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {
+//     lcd.clear();
+//     lcd.setCursor(0, 0);
+//     lcd.print("Cartao Detectado");
+
+//     lcd.setCursor(0, 1);
+//     for (byte i = 0; i < rfid.uid.size; i++) {
+//       lcd.print(rfid.uid.uidByte[i], HEX);
+//       lcd.print(":");
+//     }
+
+//     delay(2000);
+//   }
+// }
+
